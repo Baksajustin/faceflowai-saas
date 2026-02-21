@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model User {
+  id                    String    @id @default(cuid())
+  name                  String?
+  email                 String?   @unique
+  emailVerified         DateTime? @map("email_verified")
+  image                 String?
+  subscriptionStatus    String    @default("inactive") @map("subscription_status")
+  subscriptionTier      String    @default("free") @map("subscription_tier")
+  stripeCustomerId      String?   @unique @map("stripe_customer_id")
+  stripeSubscriptionId  String?   @unique @map("stripe_subscription_id")
+  currentPeriodEnd      DateTime? @map("current_period_end")
+  generationsUsed       Int       @default(0) @map("generations_used")
+  generationsLimit      Int       @default(10) @map("generations_limit")
+  creditsBalance        Int       @default(0) @map("credits_balance")
+  creditsTotal          Int       @default(0) @map("credits_total")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+
+  accounts      Account[]
+  sessions      Session[]
+  generations   Generation[]
+  faceModels    FaceModel[]
+  creditTransactions CreditTransaction[]
+  printOrders   PrintOrder[]
+
+  @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+
+model Generation {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  prompt      String
+  imageUrl    String   @map("image_url")
+  modelId     String?  @map("model_id")
+  style       String?
+  cost        Int      @default(1)
+  status      String   @default("completed")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("generations")
+}
+
+model FaceModel {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  name        String
+  modelId     String?  @map("model_id")
+  status      String   @default("training")
+  imageUrls   String[] @map("image_urls")
+  triggerWord String?  @map("trigger_word")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  completedAt DateTime? @map("completed_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("face_models")
+}
+
+model CreditTransaction {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  amount      Int
+  type        String
+  description String
+  stripePaymentId String? @map("stripe_payment_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("credit_transactions")
+}
+
+model PrintOrder {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  printfulId  String?  @map("printful_id")
+  imageUrl    String   @map("image_url")
+  productName String   @map("product_name")
+  variantName String   @map("variant_name")
+  quantity    Int      @default(1)
+  unitPrice   Decimal  @map("unit_price")
+  totalPrice  Decimal  @map("total_price")
+  status      String   @default("pending")
+  shippingAddress Json? @map("shipping_address")
+  trackingUrl String?  @map("tracking_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("print_orders")
+}
