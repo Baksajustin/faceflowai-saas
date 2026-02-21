@@ -22,7 +22,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "date-fns": "^2.30.0",
-    "lucide-react": "^0.575.0",
+    "lucide-react": "^0.475.0",
     "next": "14.0.3",
     "next-auth": "^4.24.5",
     "react": "^18.2.0",
