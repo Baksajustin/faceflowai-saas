@@ -205,8 +205,6 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 }
 
 // Disable body parsing for webhooks
-export const config = {
-  api: {
-    bodyParser: false,
+export const runtime = 'nodejs';
   },
 }
